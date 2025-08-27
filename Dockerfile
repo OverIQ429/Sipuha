@@ -8,7 +8,7 @@ RUN useradd -rms /bin/bash maxim && chmod 777 /opt /run
 
 WORKDIR /sipuha
 
-COPY --chown=linker:linker . .
+COPY --chown=maxim:maxim . .
 
 RUN pip install -r requirements.txt
 
