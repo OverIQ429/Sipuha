@@ -10,6 +10,10 @@ WORKDIR /sipuha
 
 COPY --chown=maxim:maxim . .
 
+RUN mkdir -p uploads && chmod 777 uploads
+
+RUN mkdir -p static && chmod 777 static
+
 RUN pip install -r requirements.txt
 
 USER maxim
