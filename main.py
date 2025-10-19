@@ -97,11 +97,6 @@ async def check_sound(request: Request, result: str = None):
     )
 
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "workers": thread_pool._max_workers}
-
-
 if __name__ == "__main__":
     import uvicorn
 
