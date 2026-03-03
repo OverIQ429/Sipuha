@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from datetime import timedelta
-
+from fastapi import Query
 import security
 
 create_tables()
@@ -168,16 +168,18 @@ async def logout():
     response.delete_cookie(key="access_token")
     return response
 
-@app.get("/upload", response_class=HTMLResponse)
+@app.get("/upload/", response_class=HTMLResponse)
 async def upload_page(
         request: Request,
+        result: str = Query(None),
         current_user: User = Depends(auth_required)
 ):
     return templates.TemplateResponse(
-        "upload.html",
+        "result.html",
         {
             "request": request,
-            "current_user": current_user
+            "current_user": current_user,
+            "result": result if result else ""
         }
     )
 
@@ -231,11 +233,6 @@ async def upload_file(
                 os.unlink(file_path)
         except:
             pass
-
-
-@app.get("/program", response_class=HTMLResponse)
-async def program_page(request: Request):
-    return templates.TemplateResponse("program.html", {"request": request})
 
 
 if __name__ == "__main__":

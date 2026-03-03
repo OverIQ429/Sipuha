@@ -1,44 +1,624 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Аудио загрузчик</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сипуха | Анализ аудио-файлов</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --dark-bg: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #00d4ff;
+            --text-light: #ffffff;
+            --text-muted: #b0b0b0;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(106, 17, 203, 0.15) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(37, 117, 252, 0.15) 0%, transparent 20%);
+        }
+
+        .user-info {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            z-index: 10;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: var(--text-light);
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            justify-content: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .logo i {
+            margin-right: 15px;
+        }
+
+        .tagline {
+            color: var(--text-muted);
+            font-size: 1.2rem;
             max-width: 600px;
             margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .upload-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .upload-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--primary-gradient);
+        }
+
+        .upload-area {
+            border: 3px dashed rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            padding: 60px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(0, 212, 255, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+            opacity: 0.8;
+        }
+
+        .upload-text {
+            margin-bottom: 20px;
+        }
+
+        .upload-text h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+
+        .upload-text p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            margin-top: 15px;
+        }
+
+        .file-label:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(106, 17, 203, 0.3);
+        }
+
+        .selected-file {
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .selected-file i {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .file-details h4 {
+            margin-bottom: 5px;
+        }
+
+        .file-details p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .upload-btn {
+            width: 100%;
+            background: var(--secondary-gradient);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(245, 87, 108, 0.3);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .player-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            animation: slideUp 0.5s ease;
+        }
+
+        .player-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-card h3 i {
+            color: var(--accent);
+        }
+
+        .audio-player {
+            width: 100%;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
             padding: 20px;
         }
-        .player {
-            margin-top: 20px;
+
+        audio {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        audio::-webkit-media-controls-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .wave-animation {
+            height: 80px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .wave {
+            width: 6px;
+            height: 40px;
+            background: var(--accent);
+            margin: 0 3px;
+            border-radius: 10px;
+            animation: wave 1.2s ease-in-out infinite;
+        }
+
+        .wave:nth-child(2) { animation-delay: 0.1s; }
+        .wave:nth-child(3) { animation-delay: 0.2s; }
+        .wave:nth-child(4) { animation-delay: 0.3s; }
+        .wave:nth-child(5) { animation-delay: 0.4s; }
+        .wave:nth-child(6) { animation-delay: 0.5s; }
+        .wave:nth-child(7) { animation-delay: 0.6s; }
+        .wave:nth-child(8) { animation-delay: 0.7s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(0, 212, 255, 0.2);
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 30px;
+            border-radius: 15px;
+            background: var(--card-bg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-left: 5px solid;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: #4CAF50;
+        }
+
+        .notification.error {
+            border-left-color: #f44336;
+        }
+
+        .notification i {
+            font-size: 1.5rem;
+        }
+
+        .notification.success i {
+            color: #4CAF50;
+        }
+
+        .notification.error i {
+            color: #f44336;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .upload-card, .player-card {
+                padding: 30px 20px;
+            }
+
+            .user-info {
+                position: relative;
+                top: 0;
+                right: 0;
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 20px;
+            }
+
+            .logo {
+                font-size: 2.2rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="user-info">
+        <a href="/logout" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Выйти из аккаунта
+        </a>
+    </div>
+
     <div class="container">
-        <h1>Загрузка аудиофайлов</h1>
-
-        <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" name="file" accept="audio/*" required>
-            <button type="submit">Загрузить</button>
-        </form>
-
-        <div class="player" id="playerContainer" style="display:none;">
-            <h3>Воспроизведение:</h3>
-            <audio controls id="audioPlayer"></audio>
+        <div class="header">
+            <h1 class="logo">
+                <i class="fas fa-wave-square"></i>Сипуха
+            </h1>
+            <p class="tagline">Загружайте и анализируйте аудиофайлы на наличие Deepfake'a.</p>
         </div>
 
-    </div>
-    <div class="user-info">
-        <a href="/logout" class="logout-btn">Выйти из аккаунта</a>
+        <div class="upload-card">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="wave-animation">
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                </div>
+
+                <div class="upload-area" id="dropArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>Перетащите аудиофайл сюда</h3>
+                        <p>или нажмите для выбора файла</p>
+                    </div>
+                    <input type="file" name="file" id="fileInput" class="file-input" accept="audio/*" required>
+                    <label for="fileInput" class="file-label">
+                        <i class="fas fa-file-audio"></i> Выберите файл
+                    </label>
+                </div>
+
+                <div id="selectedFileContainer" class="selected-file" style="display:none;">
+                    <i class="fas fa-music"></i>
+                    <div class="file-details">
+                        <h4 id="fileName"></h4>
+                        <p id="fileSize"></p>
+                    </div>
+                </div>
+
+                <button type="submit" class="upload-btn" id="submitBtn">
+                    <i class="fas fa-upload"></i> Загрузить и проанализировать
+                </button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Обработка аудиофайла...</p>
+        </div>
+
+        <div class="player-card" id="playerContainer" style="display:none;">
+            <h3><i class="fas fa-play-circle"></i> Воспроизведение:</h3>
+            <div class="audio-player">
+                <audio controls id="audioPlayer"></audio>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2023 AudioSphere. Поддерживаемые форматы: MP3, WAV, FLAC, AAC, OGG</p>
+        </div>
     </div>
 
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <h4 id="notificationTitle">Успех!</h4>
+            <p id="notificationMessage">Файл успешно загружен</p>
+        </div>
+    </div>
 
     <script>
+        // Элементы DOM
+        const fileInput = document.getElementById('fileInput');
+        const dropArea = document.getElementById('dropArea');
+        const selectedFileContainer = document.getElementById('selectedFileContainer');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const playerContainer = document.getElementById('playerContainer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+
+        // Обработчики drag & drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.classList.add('dragover');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('dragover');
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+        dropArea.addEventListener('click', () => fileInput.click());
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        }
+
+        // Обработчик выбора файла
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                handleFiles(this.files);
+            }
+        });
+
+        // Обработка файлов
+        function handleFiles(files) {
+            const file = files[0];
+
+            // Проверка типа файла
+            if (!file.type.startsWith('audio/')) {
+                showNotification('Ошибка', 'Пожалуйста, выберите аудиофайл', 'error');
+                return;
+            }
+
+            // Отображение информации о файле
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            selectedFileContainer.style.display = 'flex';
+
+            // Активация кнопки загрузки
+            submitBtn.disabled = false;
+
+            // Показываем уведомление
+            showNotification('Файл выбран', `${file.name} готов к загрузке`, 'success');
+        }
+
+        // Форматирование размера файла
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Показать уведомление
+        function showNotification(title, message, type) {
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+
+            notification.className = 'notification';
+            notification.classList.add(type, 'show');
+
+            // Установка иконки
+            const icon = notification.querySelector('i');
+            icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+
+            // Автоматическое скрытие
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        // Обработка отправки формы
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            if (!fileInput.files.length) {
+                showNotification('Ошибка', 'Пожалуйста, выберите файл', 'error');
+                return;
+            }
+
+            // Показать индикатор загрузки
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+            loading.style.display = 'block';
+
             const formData = new FormData();
-            formData.append('file', e.target.file.files[0]);
+            formData.append('file', fileInput.files[0]);
 
             try {
                 const response = await fetch('/upload/', {
@@ -47,23 +627,49 @@
                 });
 
                 const result = await response.json();
+
                 if (result.status === 'success') {
-                    window.location.href = `/check_sound?result=${result.result}`;
+                    showNotification('Успех!', 'Файл успешно загружен', 'success');
+
+                    // Задержка перед редиректом для показа уведомления
+                    setTimeout(() => {
+                        window.location.href = `/upload/?result=${result.result}`;
+                    }, 1500);
+                } else {
+                    showNotification('Ошибка', result.message || 'Ошибка при загрузке файла', 'error');
                 }
 
             } catch (error) {
                 console.error('Ошибка:', error);
-                alert('Ошибка при загрузке файла');
+                showNotification('Ошибка', 'Ошибка при загрузке файла', 'error');
+            } finally {
+                // Сброс состояния
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-upload"></i> Загрузить и проанализировать';
+                loading.style.display = 'none';
             }
         });
 
+        // Функция воспроизведения аудио
         function playAudio(filename) {
-            const player = document.getElementById('audioPlayer');
-            player.src = `/download/${filename}`;
-            document.getElementById('playerContainer').style.display = 'block';
-            player.play();
+            playerContainer.style.display = 'block';
+            audioPlayer.src = `/download/${filename}`;
+            audioPlayer.play();
+
+            // Прокрутка к плееру
+            playerContainer.scrollIntoView({ behavior: 'smooth' });
         }
 
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, есть ли параметр с именем файла в URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const audioFile = urlParams.get('play');
+
+            if (audioFile) {
+                playAudio(audioFile);
+            }
+        });
     </script>
 </body>
 </html>
