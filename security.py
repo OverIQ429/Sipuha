@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi import HTTPException, status
-BASE_DIR = Path(__file__).resolve().parent.parent
 from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = SECRET_KEY_FILE = BASE_DIR / 'secret_key.txt'
 ALGORITHM = "HS256"
