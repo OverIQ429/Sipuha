@@ -1,10 +1,18 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi import HTTPException, status
+BASE_DIR = Path(__file__).resolve().parent.parent
+from pathlib import Path
 
+SECRET_KEY = SECRET_KEY_FILE = BASE_DIR / 'secret_key.txt'
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+try:
+    with open(SECRET_KEY_FILE, 'r', encoding='utf-8') as f:
+        SECRET_KEY = f.read().strip()
+except FileNotFoundError:
+    SECRET_KEY = 'django-insecure-development-key-change-me'
 def verify_password(plain_password, hashed_password):
     return plain_password == hashed_password
 
